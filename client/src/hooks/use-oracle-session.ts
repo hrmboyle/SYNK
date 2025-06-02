@@ -25,11 +25,13 @@ export function useOracleSession() {
   const startSessionMutation = useMutation({
     mutationFn: startOracleSession,
     onSuccess: (data) => {
+      console.log("Session started successfully:", data);
       setSessionData(data);
       setCurrentStep("riddle");
     },
     onError: (error) => {
       console.error("Failed to start oracle session:", error);
+      setCurrentStep("welcome"); // Reset to welcome on error
     },
   });
 
@@ -76,6 +78,7 @@ export function useOracleSession() {
   }, []);
 
   const startJourney = useCallback(() => {
+    console.log("Starting journey, setting loading state");
     setCurrentStep("loading");
     startSessionMutation.mutate();
   }, [startSessionMutation]);
