@@ -6,11 +6,23 @@ interface LoadingScreenProps {
 }
 
 const loadingMessages = [
-  "Consulting the cosmic wisdom...",
-  "Aligning with celestial energies...",
-  "Weaving your destiny tapestry...",
-  "Channeling ancient knowledge...",
-  "Interpreting the sacred symbols..."
+  "!",
+  "__",
+  "@",
+  "__",
+  "@#",
+  "__",
+  "#$",
+  "__",
+  "$%",
+  "__",
+  "%^",
+  "__",
+  "^&",
+  "__",
+  "&*",
+  "__",
+  "*"
 ];
 
 export function LoadingScreen({ message }: LoadingScreenProps) {
@@ -22,9 +34,11 @@ export function LoadingScreen({ message }: LoadingScreenProps) {
       return;
     }
 
+    let index = 0;
     const interval = setInterval(() => {
-      setCurrentMessage(loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
-    }, 2000);
+      setCurrentMessage(loadingMessages[index % loadingMessages.length]);
+      index++;
+    }, 200);
 
     return () => clearInterval(interval);
   }, [message]);

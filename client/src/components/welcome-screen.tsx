@@ -19,7 +19,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-4xl md:text-6xl font-light tracking-wider text-mystical-gold mb-4"
         >
-          Mystic Oracle
+          SYNK
         </motion.h1>
         
         <motion.p
@@ -28,7 +28,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           transition={{ delay: 0.4, duration: 0.6 }}
           className="text-lg md:text-xl text-cosmic-300 max-w-md mx-auto leading-relaxed"
         >
-          Journey into the depths of your inner wisdom through ancient symbols and cosmic riddles
+          
         </motion.p>
         
         {/* Sacred Yin-Yang Entry Point */}
@@ -65,7 +65,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           transition={{ delay: 0.8, duration: 0.6 }}
           className="text-sm text-cosmic-400 animate-pulse"
         >
-          Touch the sacred symbol to begin
+          Touch to begin
         </motion.p>
       </div>
     </motion.div>

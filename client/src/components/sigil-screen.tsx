@@ -78,7 +78,7 @@ export function SigilScreen({ sigils, onSelectSigil }: SigilScreenProps) {
                 >
                   {renderSigil(index)}
                 </motion.div>
-                <p className="text-sm text-cosmic-300">{sigil}</p>
+
               </motion.div>
             ))}
           </motion.div>
