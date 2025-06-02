@@ -1,0 +1,36 @@
+I want to create an app that does the following
+It asks a user a set of questions
+These questions themselves could be modular, this is to say, interchangeable.The idea in essence
+
+A user goes to this app, is presented with a uniquely styled simple page that has a question, this question could be chossing between two abstract images that have been created by an ai, and based on the response, there is an interpretation of the choice and another question is asked. The logic behind the progression of questions and how their answers are interpreted is to be abstract, cryptic, mysterious.  Once a set number of questions have been asked, lets say three.
+
+1. Some sort of riddle with two answers that are displayed, the user then selects and answer.
+2.  Two very simple images that have been created, the user selects one. The goal here is to have ai render the images, but I suppose I am orientating on simple images because it would be ideal for this to happen quickly.
+3.  Maybe a simple question with a text box, like "How's the weather" and the user can say whatever in text.
+
+From this process, we then have an interpretation of the answers. This would involve a prompt I imagine, and the variables are substituted in. I think there could be numerous layers of creative abstraction here. From the alchemy of the answered questions and subsequent interpretation by whatever relevant AI model, we move onto the answer.
+
+I am not sure what it should be, and I think it would be something to have a broad spectrum of potential renderings.
+
+But for now here is a basic concept.
+
+Some sort of seal like image, or symbol. A rendered song perhaps through suno, and the prompt that created the song comes from the creative abstraction of the users inputted data. A short mantra.
+
+So user experience.
+
+1. Web page/App loads, and there is a simple symbol, like the yin and yang that renders.
+2. The user clicks the image (or touches, this is phone orientated)
+3. A loading symbol appears
+4. A question is rendered that is unique - this question, comes from a prompt that is along the lines of "Create a riddle for me, can you make the riddle abstract like a zen koan, less than 50 words"
+5. The potential answers to this question come from another interaction with an AI, and the prompt is "Here is a riddle. Create two cryptic answers." Come to think of it I need to consider how this data is interpreted, the AI must return only the answers and nothing else, and because I want to split the answers so one can be selected, the format needs to be consistent, or the answer to question needs to always be the same so I can easily split the answers on the front end.
+6. User selects one of the answers
+7. The answer, is then used as an element of a subsequent prompt. Maybe something like "Generate a unique sigal based of this riddle and its answer {riddle from 4.} {answer from 6.}"   - note this needs to happen twice as the user must choose one of them
+8. User chooses simple sigal 
+9. Now the answer is created. A prompt is sent to an AI something like this "Based of {4.} {6.} and {8.} generate a prompt to be used to create a song in suno" 
+10.  Also a prompt like "Create a short mantra and or poem about {4. 6. 8.}"
+11.  Then a page loads, with the suno song, with the mantra and poem, and with the selected sigal
+12.  User can then share the url (maybe later)
+
+Yeah so some considerations
+Relevant API keys
+What  AI services to use 
