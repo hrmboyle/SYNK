@@ -9,7 +9,7 @@ import {
   type CompleteJourneyResponse,
 } from "@/lib/api";
 
-export type SessionStep = "welcome" | "loading" | "riddle" | "sigil" | "weather" | "results";
+export type SessionStep = "welcome" | "loading" | "riddle" | "sigil" | "card" | "results";
 
 export function useOracleSession() {
   const [currentStep, setCurrentStep] = useState<SessionStep>("welcome");
@@ -18,7 +18,7 @@ export function useOracleSession() {
   const [selectedAnswers, setSelectedAnswers] = useState({
     riddle: "",
     sigil: "",
-    weather: "",
+    card: "",
   });
   const [results, setResults] = useState<CompleteJourneyResponse | null>(null);
 
@@ -53,7 +53,7 @@ export function useOracleSession() {
     mutationFn: ({ sessionId, sigil }: { sessionId: string; sigil: string }) =>
       submitSigilSelection(sessionId, sigil),
     onSuccess: () => {
-      setCurrentStep("weather");
+      setCurrentStep("card");
     },
     onError: (error) => {
       console.error("Failed to submit sigil selection:", error);
@@ -61,8 +61,8 @@ export function useOracleSession() {
   });
 
   const completeJourneyMutation = useMutation({
-    mutationFn: ({ sessionId, weatherInput }: { sessionId: string; weatherInput: string }) =>
-      completeJourney(sessionId, weatherInput),
+    mutationFn: ({ sessionId, cardValue }: { sessionId: string; cardValue: string }) =>
+      completeJourney(sessionId, cardValue),
     onSuccess: (data) => {
       setResults(data);
       setCurrentStep("results");
@@ -101,19 +101,19 @@ export function useOracleSession() {
     sigilSelectionMutation.mutate({ sessionId: sessionData.sessionId, sigil });
   }, [sessionData, sigilSelectionMutation]);
 
-  const submitWeatherInput = useCallback((weatherInput: string) => {
+  const submitCardValue = useCallback((cardValue: string) => {
     if (!sessionData) return;
     
-    setSelectedAnswers(prev => ({ ...prev, weather: weatherInput }));
+    setSelectedAnswers(prev => ({ ...prev, card: cardValue }));
     setCurrentStep("loading");
-    completeJourneyMutation.mutate({ sessionId: sessionData.sessionId, weatherInput });
+    completeJourneyMutation.mutate({ sessionId: sessionData.sessionId, cardValue });
   }, [sessionData, completeJourneyMutation]);
 
   const resetJourney = useCallback(() => {
     setCurrentStep("welcome");
     setSessionData(null);
     setSigilOptions([]);
-    setSelectedAnswers({ riddle: "", sigil: "", weather: "" });
+    setSelectedAnswers({ riddle: "", sigil: "", card: "" });
     setResults(null);
   }, []);
 
@@ -131,7 +131,7 @@ export function useOracleSession() {
     startJourney,
     selectRiddleAnswer,
     selectSigil,
-    submitWeatherInput,
+    submitCardValue,
     resetJourney,
   };
 }

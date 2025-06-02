@@ -14,7 +14,7 @@ export interface CompleteJourneyResponse {
   sessionId: string;
   riddleAnswer: string;
   selectedSigil: string;
-  weatherInput: string;
+  cardValue: string;
   mantra: string;
   poem: string;
   songPrompt: string;
