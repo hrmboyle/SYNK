@@ -9,7 +9,7 @@ interface ResultsScreenProps {
   selectedAnswers: {
     riddle: string;
     sigil: string;
-    weather: string;
+    card: string;
   };
   onReset: () => void;
 }

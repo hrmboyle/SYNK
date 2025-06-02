@@ -4,7 +4,7 @@ import { WelcomeScreen } from "@/components/welcome-screen";
 import { LoadingScreen } from "@/components/loading-screen";
 import { RiddleScreen } from "@/components/riddle-screen";
 import { SigilScreen } from "@/components/sigil-screen";
-import { WeatherScreen } from "@/components/weather-screen";
+import { CardScreen } from "@/components/card-screen";
 import { ResultsScreen } from "@/components/results-screen";
 
 export default function Home() {
@@ -18,7 +18,7 @@ export default function Home() {
     startJourney,
     selectRiddleAnswer,
     selectSigil,
-    submitWeatherInput,
+    submitCardValue,
     resetJourney,
   } = useOracleSession();
 
@@ -62,9 +62,9 @@ export default function Home() {
         />
       )}
       
-      {currentStep === "weather" && (
-        <WeatherScreen
-          onSubmit={submitWeatherInput}
+      {currentStep === "card" && (
+        <CardScreen
+          onSubmit={submitCardValue}
         />
       )}
       

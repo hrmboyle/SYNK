@@ -41,10 +41,10 @@ export async function submitSigilSelection(sessionId: string, sigil: string): Pr
   return await response.json();
 }
 
-export async function completeJourney(sessionId: string, weatherInput: string): Promise<CompleteJourneyResponse> {
+export async function completeJourney(sessionId: string, cardValue: string): Promise<CompleteJourneyResponse> {
   const response = await apiRequest("POST", "/api/oracle/complete", {
     sessionId,
-    weatherInput,
+    cardValue,
   });
   return await response.json();
 }
