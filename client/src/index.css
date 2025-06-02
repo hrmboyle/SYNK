@@ -1,0 +1,244 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 240 11% 98%; /* #F5F7FA */
+  --foreground: 240 15% 9%; /* #0B1426 */
+  --muted: 240 5% 96%; /* #F1F5F9 */
+  --muted-foreground: 240 4% 46%; /* #64748B */
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 240 15% 9%; /* #0B1426 */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 240 15% 9%; /* #0B1426 */
+  --border: 240 6% 90%; /* #E2E8F0 */
+  --input: 240 6% 90%; /* #E2E8F0 */
+  --primary: 200 98% 39%; /* #0369A1 */
+  --primary-foreground: 0 0% 98%; /* #F8FAFC */
+  --secondary: 240 5% 96%; /* #F1F5F9 */
+  --secondary-foreground: 240 6% 10%; /* #1E293B */
+  --accent: 240 5% 96%; /* #F1F5F9 */
+  --accent-foreground: 240 6% 10%; /* #1E293B */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 0 0% 98%; /* #F8FAFC */
+  --ring: 240 15% 9%; /* #0B1426 */
+  --radius: 0.5rem;
+
+  /* Mystical Oracle Theme */
+  --cosmic-900: 240 40% 8%; /* #0B1426 */
+  --cosmic-800: 240 25% 15%; /* #1A2332 */
+  --cosmic-700: 248 44% 25%; /* #2D1B69 */
+  --cosmic-600: 241 76% 62%; /* #6366F1 */
+  --cosmic-500: 258 90% 66%; /* #8B5CF6 */
+  --cosmic-400: 256 68% 76%; /* #A78BFA */
+  --cosmic-300: 252 57% 81%; /* #C4B5FD */
+  --cosmic-200: 252 87% 89%; /* #DDD6FE */
+  --cosmic-100: 220 14% 96%; /* #F3F4F6 */
+  
+  --mystical-gold: 43 96% 56%; /* #F59E0B */
+  --mystical-lightGold: 42 96% 70%; /* #FCD34D */
+  --mystical-silver: 215 16% 83%; /* #E5E7EB */
+  --mystical-pearl: 210 40% 98%; /* #F8FAFC */
+}
+
+.dark {
+  --background: 240 15% 9%; /* #0B1426 */
+  --foreground: 220 14% 96%; /* #F3F4F6 */
+  --muted: 240 25% 15%; /* #1A2332 */
+  --muted-foreground: 240 5% 65%; /* #94A3B8 */
+  --popover: 240 15% 9%; /* #0B1426 */
+  --popover-foreground: 220 14% 96%; /* #F3F4F6 */
+  --card: 240 25% 15%; /* #1A2332 */
+  --card-foreground: 220 14% 96%; /* #F3F4F6 */
+  --border: 240 25% 20%; /* #334155 */
+  --input: 240 25% 20%; /* #334155 */
+  --primary: 43 96% 56%; /* #F59E0B */
+  --primary-foreground: 240 15% 9%; /* #0B1426 */
+  --secondary: 240 25% 15%; /* #1A2332 */
+  --secondary-foreground: 220 14% 96%; /* #F3F4F6 */
+  --accent: 240 25% 15%; /* #1A2332 */
+  --accent-foreground: 220 14% 96%; /* #F3F4F6 */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 0 0% 98%; /* #F8FAFC */
+  --ring: 43 96% 56%; /* #F59E0B */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Mystical Oracle Custom Styles */
+.cosmic-gradient {
+  background: linear-gradient(135deg, #0B1426 0%, #1A2332 50%, #2D1B69 100%);
+}
+
+.mystical-glow {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.1);
+}
+
+.yin-yang {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(45deg, #F8FAFC 50%, #1A2332 50%);
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.yin-yang:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
+}
+
+.yin-yang::before,
+.yin-yang::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+.yin-yang::before {
+  top: 0;
+  left: 30px;
+  background: #1A2332;
+}
+
+.yin-yang::after {
+  bottom: 0;
+  right: 30px;
+  background: #F8FAFC;
+}
+
+.sigil {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sigil:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+}
+
+.sigil::before {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #F8FAFC;
+  border-radius: 50%;
+}
+
+.loading-orb {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(45deg, #6366F1, #8B5CF6, #F59E0B);
+  border-radius: 50%;
+  animation: rotate-slow linear infinite;
+  position: relative;
+}
+
+.loading-orb::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  background: #1A2332;
+  border-radius: 50%;
+}
+
+.question-card {
+  background: rgba(26, 35, 50, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.answer-button {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.answer-button:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Custom scrollbar for mystical theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(26, 35, 50, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.7);
+}
+
+/* Animation keyframes */
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Custom color utilities */
+.text-cosmic-900 { color: #0B1426; }
+.text-cosmic-800 { color: #1A2332; }
+.text-cosmic-700 { color: #2D1B69; }
+.text-cosmic-600 { color: #6366F1; }
+.text-cosmic-500 { color: #8B5CF6; }
+.text-cosmic-400 { color: #A78BFA; }
+.text-cosmic-300 { color: #C4B5FD; }
+.text-cosmic-200 { color: #DDD6FE; }
+.text-cosmic-100 { color: #F3F4F6; }
+
+.text-mystical-gold { color: #F59E0B; }
+.text-mystical-lightGold { color: #FCD34D; }
+.text-mystical-silver { color: #E5E7EB; }
+.text-mystical-pearl { color: #F8FAFC; }
+
+.bg-cosmic-900 { background-color: #0B1426; }
+.bg-cosmic-800 { background-color: #1A2332; }
+.bg-cosmic-700 { background-color: #2D1B69; }
+.bg-cosmic-600 { background-color: #6366F1; }
+.bg-cosmic-500 { background-color: #8B5CF6; }
+.bg-cosmic-400 { background-color: #A78BFA; }
+.bg-cosmic-300 { background-color: #C4B5FD; }
+.bg-cosmic-200 { background-color: #DDD6FE; }
+.bg-cosmic-100 { background-color: #F3F4F6; }
+
+.bg-mystical-gold { background-color: #F59E0B; }
+.bg-mystical-lightGold { background-color: #FCD34D; }
+.bg-mystical-silver { background-color: #E5E7EB; }
+.bg-mystical-pearl { background-color: #F8FAFC; }
+
+/* Border utilities */
+.border-cosmic-600 { border-color: #6366F1; }
+.border-mystical-gold { border-color: #F59E0B; }
