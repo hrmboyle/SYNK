@@ -1,41 +1,13 @@
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+// Removed useEffect and useState as they are no longer needed for cycling messages
 
 interface LoadingScreenProps {
-  message?: string;
+  // message prop is removed as we are not displaying text
 }
 
-// Updated with mystic Unicode symbols
-const loadingMessages = [
-  '✧', // White Four Pointed Star
-  '❖', // Black Diamond Minus White X
-  '◈', // White Diamond Containing Black Small Diamond
-  '△', // White Up-Pointing Triangle
-  '◎', // Bullseye
-  '🜁', // Alchemical Symbol for Air
-  '⊕', // Circled Plus / Earth Symbol
-  '✧', // Loop back to the start or add more
-];
-
-export function LoadingScreen({ message }: LoadingScreenProps) {
-  const [currentMessage, setCurrentMessage] = useState(
-    message || loadingMessages[0]
-  );
-
-  useEffect(() => {
-    if (message) {
-      setCurrentMessage(message);
-      return;
-    }
-
-    let index = 0;
-    const interval = setInterval(() => {
-      setCurrentMessage(loadingMessages[index % loadingMessages.length]);
-      index++;
-    }, 200); // You can adjust the speed (200ms) if you like
-
-    return () => clearInterval(interval);
-  }, [message]);
+export function LoadingScreen({}: LoadingScreenProps) {
+  // message prop removed here
+  // Removed currentMessage state and the useEffect for cycling messages
 
   return (
     <motion.div
@@ -57,16 +29,7 @@ export function LoadingScreen({ message }: LoadingScreenProps) {
           }}
         />
 
-        <motion.p
-          key={currentMessage} // key helps Framer Motion animate changes
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.2 }} // Faster transition for message change
-          className='text-lg text-cosmic-300'
-        >
-          {currentMessage}
-        </motion.p>
+        {/* The motion.p element for displaying messages has been removed */}
       </div>
     </motion.div>
   );

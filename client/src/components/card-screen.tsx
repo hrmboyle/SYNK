@@ -49,6 +49,17 @@ const minorArcanaRanks = [
   'King',
 ];
 
+// Unicode symbols for cycling animation (from loading-screen.tsx)
+const cyclingSymbols = [
+  '✧', // White Four Pointed Star
+  '❖', // Black Diamond Minus White X
+  '◈', // White Diamond Containing Black Small Diamond
+  '△', // White Up-Pointing Triangle
+  '◎', // Bullseye
+  '🜁', // Alchemical Symbol for Air
+  '⊕', // Circled Plus / Earth Symbol
+];
+
 const generateTarotDeck = () => {
   const deck = [...majorArcana];
   for (const suit of minorArcanaSuits) {
@@ -61,18 +72,30 @@ const generateTarotDeck = () => {
 
 export function CardScreen({ onSubmit }: CardScreenProps) {
   const [tarotDeck] = useState(generateTarotDeck());
-  const [currentCardName, setCurrentCardName] = useState(tarotDeck[0]);
+  // Initialize currentCardName with a random card for the initial state before cycling starts or if cycling is very brief
+  const [currentCardName, setCurrentCardName] = useState(() => {
+    const initialRandomIndex = Math.floor(Math.random() * tarotDeck.length);
+    return tarotDeck[initialRandomIndex];
+  });
+  // State for the symbol displayed during cycling
+  const [displayedSymbol, setDisplayedSymbol] = useState(cyclingSymbols[0]);
   const [isRunning, setIsRunning] = useState(true);
   const [cardStopped, setCardStopped] = useState(false);
 
-  // Effect for cycling cards
+  // Effect for cycling cards and symbols
   useEffect(() => {
     if (!isRunning) return;
 
+    let symbolIndex = 0;
     const interval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * tarotDeck.length);
-      setCurrentCardName(tarotDeck[randomIndex]);
-    }, 120); // Speed of card name cycling, slightly slower for readability
+      // Cycle through symbols for display
+      setDisplayedSymbol(cyclingSymbols[symbolIndex % cyclingSymbols.length]);
+      symbolIndex++;
+
+      // Simultaneously, pick a random Tarot card name. This will be the card selected if the user stops the cycle.
+      const randomTarotIndex = Math.floor(Math.random() * tarotDeck.length);
+      setCurrentCardName(tarotDeck[randomTarotIndex]);
+    }, 120); // Speed of cycling
 
     return () => clearInterval(interval);
   }, [isRunning, tarotDeck]);
@@ -81,7 +104,7 @@ export function CardScreen({ onSubmit }: CardScreenProps) {
   useEffect(() => {
     if (cardStopped) {
       const timer = setTimeout(() => {
-        onSubmit(currentCardName); // Submit the name of the Tarot card
+        onSubmit(currentCardName); // Submit the name of the Tarot card that was current when stopped
       }, 1800); // 1.8-second delay to see the card before submitting
 
       return () => clearTimeout(timer);
@@ -92,6 +115,7 @@ export function CardScreen({ onSubmit }: CardScreenProps) {
     if (isRunning) {
       setIsRunning(false);
       setCardStopped(true);
+      // currentCardName is already set to the "stopped" card by the cycling useEffect
     }
   };
 
@@ -128,14 +152,13 @@ export function CardScreen({ onSubmit }: CardScreenProps) {
                 animate={
                   isRunning
                     ? {
-                        // Simple visual effect for "shuffling" names
                         opacity: [0.7, 1, 0.7],
                         scale: [1, 1.03, 1],
                       }
                     : {
-                        scale: 1.1, // Slightly larger when stopped
+                        scale: 1.1,
                         boxShadow:
-                          '0px 0px 15px 5px hsl(var(--mystical-gold) / 0.7)', // Add a stronger glow when stopped
+                          '0px 0px 15px 5px hsl(var(--mystical-gold) / 0.7)',
                       }
                 }
                 transition={
@@ -159,13 +182,14 @@ export function CardScreen({ onSubmit }: CardScreenProps) {
                     : {}
                 }
               >
-                {/* Display Tarot card name */}
+                {/* Display cycling symbol or the final card name */}
                 <span
-                  className={`text-xl font-semibold text-mystical-pearl ${
-                    !isRunning ? 'tracking-wide' : ''
+                  className={`text-2xl font-semibold text-mystical-pearl ${
+                    // Increased text size for symbols
+                    !isRunning ? 'tracking-wide text-xl' : 'text-4xl' // Different sizes for symbol vs card name
                   }`}
                 >
-                  {currentCardName}
+                  {isRunning ? displayedSymbol : currentCardName}
                 </span>
               </motion.div>
             </div>
