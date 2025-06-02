@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "AIzaSyA1yp_TzbXovKEfKsxYBWV-LUFuiQ7zE6Y");
+// Ensure your GEMINI_API_KEY is correctly set in your environment variables
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "-"); // Fallback key is likely a placeholder
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function generateRiddle(): Promise<{
@@ -14,13 +15,13 @@ export async function generateRiddle(): Promise<{
     const response = await result.response;
     const text = response.text();
     
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
+      const jsonString = jsonMatch[1] || jsonMatch[2]; // Use the captured group from either markdown code block or plain JSON
+      const parsed = JSON.parse(jsonString);
       return {
         riddle: parsed.riddle || "What flows like water yet burns like fire?",
-        answers: parsed.answers || ["The whispers of ancient wisdom", "The dance of shadows beneath moonlight"]
+        answers: parsed.answers && parsed.answers.length === 2 ? parsed.answers : ["The whispers of ancient wisdom", "The dance of shadows beneath moonlight"]
       };
     }
     
@@ -40,37 +41,61 @@ export async function generateRiddle(): Promise<{
 
 export async function generateSigils(riddleAnswer: string): Promise<string[]> {
   try {
-    const prompt = `Based on this riddle answer: "${riddleAnswer}", create exactly 2 simple geometric sigil descriptions. Each should be a short name/title that represents the essence. Return JSON with 'sigils' array containing exactly 2 strings.`;
+    // Updated prompt to request SVG strings
+    const prompt = `Based on this riddle answer: "${riddleAnswer}", generate exactly 2 simple, abstract, mythically random sigil images as self-contained SVG strings. Each SVG should be a complete, valid SVG element with a viewBox="0 0 50 50" and use 'white' for strokes or fills on a transparent background, suitable for a mystical theme. Return these as a JSON object with a key "sigils" containing an array of exactly 2 SVG strings. For example: {"sigils": ["<svg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'><circle cx='25' cy='25' r='20' stroke='white' stroke-width='2' fill='transparent'/></svg>", "<svg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='10' width='30' height='30' stroke='white' stroke-width='2' fill='transparent'/></svg>"]}.`;
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Enhanced JSON extraction to handle potential markdown code blocks
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return parsed.sigils || ["The Circle of Infinite Wisdom", "The Twin Triangles of Balance"];
+      const jsonString = jsonMatch[1] || jsonMatch[2]; // Use the captured group from either markdown code block or plain JSON
+      const parsed = JSON.parse(jsonString);
+      // Ensure 'sigils' is an array of two strings (SVG content)
+      if (Array.isArray(parsed.sigils) && parsed.sigils.length === 2 && parsed.sigils.every((s: any) => typeof s === 'string')) {
+        return parsed.sigils;
+      }
     }
     
-    return ["Sacred Geometry", "Eternal Symbol"];
+    // Updated Fallback to provide simple SVG strings
+    console.warn("AI did not return valid SVG strings for sigils, using fallback.");
+    return [
+      "<svg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'><circle cx='25' cy='25' r='20' stroke='white' stroke-width='2' fill='transparent'/><circle cx='25' cy='25' r='5' fill='white'/></svg>",
+      "<svg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'><polygon points='25,5 45,45 5,45' stroke='white' stroke-width='2' fill='transparent'/></svg>"
+    ];
   } catch (error) {
     console.error("Error generating sigils:", error);
-    return ["Sacred Geometry", "Eternal Symbol"];
+    // Fallback in case of error
+    return [
+      "<svg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'><circle cx='25' cy='25' r='20' stroke='white' stroke-width='2' fill='transparent'/><circle cx='25' cy='25' r='5' fill='white'/></svg>",
+      "<svg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'><polygon points='25,5 45,45 5,45' stroke='white' stroke-width='2' fill='transparent'/></svg>"
+    ];
   }
 }
 
 export async function generateMantraAndPoem(
   riddleAnswer: string,
-  selectedSigil: string,
+  selectedSigil: string, // This will now be an SVG string; consider if the prompt needs just a description or can handle SVG.
+                         // For now, assuming the selectedSigil string (SVG) might be too verbose for the prompt.
+                         // It might be better to use the *description* of the sigil if you still have it,
+                         // or a generic placeholder if the SVG string itself is passed here.
+                         // For this iteration, I'll assume the `selectedSigil` variable will be handled appropriately
+                         // before being interpolated into the prompt, or the AI can interpret/ignore verbose SVG.
   cardValue: string
 ): Promise<{
   mantra: string;
   poem: string;
 }> {
   try {
+    // Consider if the full SVG string for 'selectedSigil' is appropriate here, or if you need its original name/description.
+    // If `selectedSigil` is a very long SVG string, it might make the prompt too long or confuse the AI.
+    // You might want to pass a generic term like "the chosen symbol" or its original AI-generated name if you store that.
+    // For now, the prompt uses it directly.
     const prompt = `Based on these elements:
     - Riddle answer: "${riddleAnswer}"
-    - Chosen sigil: "${selectedSigil}"
+    - Chosen sigil: A symbol represented by "${selectedSigil.substring(0, 50)}..." (Description of a visual symbol)
     - Card drawn: "${cardValue}"
     
     Create a mantra (4-6 lines, poetic, uplifting) and a longer poem (8-12 lines) that weaves these elements together. Avoid using "you" or "your" - focus on universal themes and timeless wisdom. Return JSON with 'mantra' and 'poem' strings.`;
@@ -79,9 +104,10 @@ export async function generateMantraAndPoem(
     const response = await result.response;
     const text = response.text();
     
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
+      const jsonString = jsonMatch[1] || jsonMatch[2];
+      const parsed = JSON.parse(jsonString);
       return {
         mantra: parsed.mantra || "In the sacred dance of light and shadow, truth emerges.",
         poem: parsed.poem || "Through ancient wisdom flowing free, understanding blooms eternally."
@@ -103,14 +129,14 @@ export async function generateMantraAndPoem(
 
 export async function generateSongPrompt(
   riddleAnswer: string,
-  selectedSigil: string,
+  selectedSigil: string, // Similar consideration as above for SVG string length/content
   cardValue: string,
   mantra: string
 ): Promise<string> {
   try {
     const prompt = `Create a song prompt for Suno AI based on these elements:
     - Riddle answer: "${riddleAnswer}"
-    - Chosen sigil: "${selectedSigil}"
+    - Chosen sigil: A symbol represented by "${selectedSigil.substring(0,50)}..." (Description of a visual symbol)
     - Card drawn: "${cardValue}"
     - Mantra: "${mantra}"
     
@@ -120,7 +146,7 @@ export async function generateSongPrompt(
     const response = await result.response;
     const text = response.text();
     
-    return text || "Ambient mystical meditation music with ethereal vocals, reflecting spiritual awakening and inner wisdom";
+    return text.replace(/```json\s*|\s*```|```/g, "").trim() || "Ambient mystical meditation music with ethereal vocals, reflecting spiritual awakening and inner wisdom";
   } catch (error) {
     console.error("Error generating song prompt:", error);
     return "Ethereal ambient track with mystical undertones, perfect for meditation and spiritual reflection";
