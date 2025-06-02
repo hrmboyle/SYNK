@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development IS_LOCAL_SERVER=true tsx server/index.ts",
-    "build": "vite build",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "dev:vite": "vite",
     "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist_server/index.js --minify --sourcemap",
     "start": "cross-env NODE_ENV=production IS_LOCAL_SERVER=true node dist_server/index.js",
