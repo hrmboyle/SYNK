@@ -1,0 +1,40 @@
+# netlify.toml
+# Place this file in the root of your project
+
+# 1. Build Settings
+# These settings define how Netlify builds and deploys your site.
+# They will override settings in the Netlify UI if present.
+[build]
+  command = "npm run build"         # Your build command
+  publish = "dist/public"           # The directory that contains your built frontend (since this worked for you)
+  functions = "netlify/functions"   # The directory where your serverless functions are located
+
+# 2. Redirect rule for Single Page Applications (SPAs)
+# This ensures that direct navigation or refreshes on sub-pages of your SPA
+# still load your main index.html, allowing your client-side router to handle it.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  # This condition ensures the rule only applies if the requested file doesn't exist.
+  # Useful if you have other static files/folders in your publish directory that should be directly accessible.
+  # For many SPAs, this condition isn't strictly necessary for the main catch-all,
+  # but it's a common and safe practice.
+  # conditions = {Role = ["!admin"]} # Example: You can add conditions, though not needed for a basic SPA rule
+
+# 3. Redirect rule for cleaner API Function URLs
+# This makes your API function (api.ts) accessible via /api/* instead of /.netlify/functions/api/*
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat" # :splat is a placeholder for the rest of the path
+  status = 200 # Use 200 for a rewrite (acts like a proxy)
+
+# 4. Optional: Settings for `netlify dev` (local development server)
+# These settings help `netlify dev` correctly run your frontend dev server and functions.
+[dev]
+  command = "npm run dev:vite" # The command to start your Vite dev server (you added "dev:vite": "vite" to package.json)
+  targetPort = 5173          # The port your Vite dev server (npm run dev:vite) typically runs on
+  port = 8888                # The port Netlify Dev will serve everything on (access your site at http://localhost:8888)
+  publish = "dist/public"    # Tell netlify dev where the static files would be (can also be where vite serves from)
+  functions = "netlify/functions"
+  # autoLaunch = true        # Uncomment to automatically open the browser
