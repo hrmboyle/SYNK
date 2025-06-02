@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from 'dotenv';
-dotenv.config();
-
+// Only run dotenv.config() in local development
+if (process.env.IS_LOCAL_SERVER === 'true') {
+  dotenv.config();
+}
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {

@@ -2,8 +2,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes"; // Assuming this defines your API routes
 import dotenv from 'dotenv';
-
-dotenv.config();
+// Only run dotenv.config() in local development
+if (process.env.IS_LOCAL_SERVER === 'true') {
+  dotenv.config();
+}
 
 const app = express();
 app.use(express.json());
