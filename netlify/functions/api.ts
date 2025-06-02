@@ -3,6 +3,8 @@ import type { Handler, HandlerEvent, HandlerContext, HandlerResponse } from "@ne
 import serverless from 'serverless-http';
 import app from '../../server/app'; // Imports your Express app
 
+
+
 const serverlessHandlerInstance = serverless(app);
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {

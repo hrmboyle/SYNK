@@ -1,4 +1,12 @@
 import { apiRequest } from "./queryClient";
+import dotenv from 'dotenv';
+const apiKey = process.env.GEMINI_API_KEY;
+  dotenv.config();
+
+if (!apiKey) {
+  console.error("FATAL ERROR: GEMINI_API_KEY is not set in environment variables. Please ensure it's in your .env file and the server is restarted.");
+  throw new Error("GEMINI_API_KEY is not set."); // This line will cause a crash if apiKey is missing
+}
 
 export interface OracleSession { // This type might be for the GET /api/oracle/session/:sessionId endpoint
   sessionId: string;
