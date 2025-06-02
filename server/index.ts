@@ -1,87 +1,29 @@
-// server/index.ts
-import express, { type Request, Response, NextFunction } from "express";
-import http from 'http'; // Import http module
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite"; // Assuming these are for local dev
+// server/index.ts (for Local Development ONLY)
+// This file is intended to be run directly using `tsx` for local development,
+// e.g., via `npm run dev`.
 
-import dotenv from 'dotenv';
-dotenv.config();
+import http from 'http';
+import app from './app'; // Import the pure Express app from server/app.ts
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Your custom logging middleware (this is fine for serverless too)
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  // @ts-ignore TODO: Fix typing for ...args if necessary
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    // @ts-ignore
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) { // Only log /api requests or as needed
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-      log(logLine); // Your custom log function
-    }
-  });
-  next();
-});
-
-// This function will configure the app but not start listening
-// It's important that registerRoutes MODIFIES the app instance.
-// If registerRoutes used to return an http.Server, that logic needs to be handled carefully.
-// For serverless, we just need the configured 'app'.
-async function configureApp(currentApp: express.Express) {
-  // The original code had `const server = await registerRoutes(app);`
-  // We need to understand what `server` was. Assuming `registerRoutes` primarily
-  // adds routes to `currentApp`. If it returned an `http.Server` instance
-  // that was used for `listen`, we'll handle listening separately for local dev.
-  await registerRoutes(currentApp); // Ensure this configures currentApp
-
-  // Error handling middleware (good to have)
-  currentApp.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    console.error("Server Error:", err.stack || err); // Log the error for debugging
-    res.status(status).json({ message });
-  });
-}
-
-// Configure the app instance immediately
-configureApp(app);
-
-// --- Local Development and Non-Serverless Specific Logic ---
-// This block will only run if NOT in a typical Netlify Function environment
-// You can use an environment variable like IS_LOCAL_SERVER to control this.
-// Netlify sets NODE_ENV=production for functions, but you might also run
-// production mode locally.
+// This block will only run if IS_LOCAL_SERVER is true (set in your npm run dev script)
 if (process.env.IS_LOCAL_SERVER === 'true') {
   (async () => {
-    const localApp = app; // Use the already configured app
-    let serverInstance = http.createServer(localApp); // Create an HTTP server instance
+    // Dynamically import Vite-specific utilities only for local development
+    // This prevents them from being bundled into serverless functions if this file were accidentally imported.
+    const { setupVite, serveStatic, log } = await import('./vite');
+
+    const localAppInstance = app; // Use the imported pure app
+    const serverInstance = http.createServer(localAppInstance);
 
     if (process.env.NODE_ENV === "development") {
       log("Setting up Vite for development...");
-      await setupVite(localApp, serverInstance); // setupVite might modify/use serverInstance
+      // Pass the Express app instance and the HTTP server instance to Vite setup
+      await setupVite(localAppInstance, serverInstance);
     } else {
-      // For local production-like testing (not Netlify deployment)
+      // This block is for running a local production-like build (e.g. after `npm run build:server` and `npm run build`)
+      // It serves static files from the Vite build output.
       log("Serving static files for local production-like mode...");
-      serveStatic(localApp);
+      serveStatic(localAppInstance); // `serveStatic` should configure `localAppInstance` to serve from 'dist/public' or similar
     }
 
     const port = process.env.PORT || 5000;
@@ -93,7 +35,18 @@ if (process.env.IS_LOCAL_SERVER === 'true') {
       log(`Local server listening on http://0.0.0.0:${port}`);
     });
   })();
+} else {
+  // This message helps diagnose if the script is run without the necessary environment variable.
+  console.warn(
+    "server/index.ts was executed without 'IS_LOCAL_SERVER=true'. " +
+    "The local development server will not start. " +
+    "This file is intended for local development via 'npm run dev'."
+  );
+  // If you need to export the app for other local tooling (not Netlify Functions),
+  // you could do it here, but it's generally not recommended for this file's new purpose.
+  // export default app;
 }
 
-// Export the configured app for serverless environments (like Netlify Functions)
-export default app;
+// No default export is typically needed from this file if it's only an entry point
+// for `tsx server/index.ts` and not meant to be imported elsewhere.
+// The Netlify function will import from `server/app.ts`.
