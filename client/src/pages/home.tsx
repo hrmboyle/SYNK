@@ -33,48 +33,48 @@ export default function Home() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-mystical-gold rounded-full opacity-5 blur-3xl animate-pulse-slow"></div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {currentStep === "welcome" && (
-          <WelcomeScreen key="welcome" onStart={startJourney} />
-        )}
-        
-        {currentStep === "loading" && (
-          <LoadingScreen key="loading" />
-        )}
-        
-        {currentStep === "riddle" && sessionData && (
-          <RiddleScreen
-            key="riddle"
-            riddle={sessionData.riddle}
-            answers={sessionData.answers}
-            onSelectAnswer={selectRiddleAnswer}
-          />
-        )}
-        
-        {currentStep === "sigil" && sigilOptions.length > 0 && (
-          <SigilScreen
-            key="sigil"
-            sigils={sigilOptions}
-            onSelectSigil={selectSigil}
-          />
-        )}
-        
-        {currentStep === "weather" && (
-          <WeatherScreen
-            key="weather"
-            onSubmit={submitWeatherInput}
-          />
-        )}
-        
-        {currentStep === "results" && results && (
-          <ResultsScreen
-            key="results"
-            results={results}
-            selectedAnswers={selectedAnswers}
-            onReset={resetJourney}
-          />
-        )}
-      </AnimatePresence>
+      {currentStep === "welcome" && (
+        <WelcomeScreen onStart={startJourney} />
+      )}
+      
+      {currentStep === "loading" && (
+        <LoadingScreen />
+      )}
+      
+      {currentStep === "riddle" && sessionData && (
+        <RiddleScreen
+          riddle={sessionData.riddle}
+          answers={sessionData.answers}
+          onSelectAnswer={selectRiddleAnswer}
+        />
+      )}
+      
+      {currentStep === "riddle" && !sessionData && (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-mystical-gold">Error: No session data available</p>
+        </div>
+      )}
+      
+      {currentStep === "sigil" && sigilOptions.length > 0 && (
+        <SigilScreen
+          sigils={sigilOptions}
+          onSelectSigil={selectSigil}
+        />
+      )}
+      
+      {currentStep === "weather" && (
+        <WeatherScreen
+          onSubmit={submitWeatherInput}
+        />
+      )}
+      
+      {currentStep === "results" && results && (
+        <ResultsScreen
+          results={results}
+          selectedAnswers={selectedAnswers}
+          onReset={resetJourney}
+        />
+      )}
     </div>
   );
 }
