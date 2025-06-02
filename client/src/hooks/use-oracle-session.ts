@@ -76,33 +76,33 @@ export function useOracleSession() {
   }, []);
 
   const startJourney = useCallback(() => {
-    showLoading(2500);
+    setCurrentStep("loading");
     startSessionMutation.mutate();
-  }, [showLoading, startSessionMutation]);
+  }, [startSessionMutation]);
 
   const selectRiddleAnswer = useCallback((answer: string) => {
     if (!sessionData) return;
     
     setSelectedAnswers(prev => ({ ...prev, riddle: answer }));
-    showLoading(2000);
+    setCurrentStep("loading");
     riddleAnswerMutation.mutate({ sessionId: sessionData.sessionId, answer });
-  }, [sessionData, showLoading, riddleAnswerMutation]);
+  }, [sessionData, riddleAnswerMutation]);
 
   const selectSigil = useCallback((sigil: string) => {
     if (!sessionData) return;
     
     setSelectedAnswers(prev => ({ ...prev, sigil }));
-    showLoading(1500);
+    setCurrentStep("loading");
     sigilSelectionMutation.mutate({ sessionId: sessionData.sessionId, sigil });
-  }, [sessionData, showLoading, sigilSelectionMutation]);
+  }, [sessionData, sigilSelectionMutation]);
 
   const submitWeatherInput = useCallback((weatherInput: string) => {
     if (!sessionData) return;
     
     setSelectedAnswers(prev => ({ ...prev, weather: weatherInput }));
-    showLoading(3000);
+    setCurrentStep("loading");
     completeJourneyMutation.mutate({ sessionId: sessionData.sessionId, weatherInput });
-  }, [sessionData, showLoading, completeJourneyMutation]);
+  }, [sessionData, completeJourneyMutation]);
 
   const resetJourney = useCallback(() => {
     setCurrentStep("welcome");
