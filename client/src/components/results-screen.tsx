@@ -57,20 +57,7 @@ export function ResultsScreen({ results, selectedAnswers, onReset }: ResultsScre
     >
       <div className="max-w-4xl mx-auto space-y-12">
         
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-center space-y-4"
-        >
-          <h1 className="text-3xl md:text-5xl font-light text-mystical-gold">
-            Your Oracle Reading
-          </h1>
-          <p className="text-lg text-cosmic-300">
-            The cosmos has spoken through your choices
-          </p>
-        </motion.div>
+
 
         {/* Selected Sigil Display */}
         <motion.div
@@ -80,7 +67,6 @@ export function ResultsScreen({ results, selectedAnswers, onReset }: ResultsScre
         >
           <Card className="question-card p-8 mystical-glow text-center">
             <CardContent className="pt-6">
-              <h3 className="text-xl text-mystical-gold mb-6">Your Sacred Symbol</h3>
               <div className="flex justify-center mb-4">
                 <motion.div
                   className="sigil relative"
@@ -110,7 +96,6 @@ export function ResultsScreen({ results, selectedAnswers, onReset }: ResultsScre
         >
           <Card className="question-card p-8 mystical-glow">
             <CardContent className="pt-6">
-              <h3 className="text-xl text-mystical-gold mb-6 text-center">Your Personal Mantra</h3>
               <div className="text-center">
                 <p className="text-lg leading-relaxed text-cosmic-200 italic whitespace-pre-line">
                   {results.mantra}
@@ -129,7 +114,6 @@ export function ResultsScreen({ results, selectedAnswers, onReset }: ResultsScre
           >
             <Card className="question-card p-8 mystical-glow">
               <CardContent className="pt-6">
-                <h3 className="text-xl text-mystical-gold mb-6 text-center">Your Cosmic Poem</h3>
                 <div className="text-center">
                   <p className="text-base leading-relaxed text-cosmic-200 whitespace-pre-line">
                     {results.poem}
@@ -148,7 +132,6 @@ export function ResultsScreen({ results, selectedAnswers, onReset }: ResultsScre
         >
           <Card className="question-card p-8 mystical-glow">
             <CardContent className="pt-6">
-              <h3 className="text-xl text-mystical-gold mb-6 text-center">Your Cosmic Song</h3>
               <div className="bg-cosmic-800/50 p-6 rounded-xl border border-cosmic-600">
                 {/* Simulated Audio Player */}
                 <div className="flex items-center space-x-4 mb-4">
@@ -191,7 +174,6 @@ export function ResultsScreen({ results, selectedAnswers, onReset }: ResultsScre
         >
           <Card className="question-card p-8 mystical-glow">
             <CardContent className="pt-6">
-              <h3 className="text-xl text-mystical-gold mb-6 text-center">Your Journey Path</h3>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-mystical-gold rounded-full flex items-center justify-center flex-shrink-0 mt-1">
