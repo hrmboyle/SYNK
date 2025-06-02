@@ -26,8 +26,10 @@ export function useOracleSession() {
     mutationFn: startOracleSession,
     onSuccess: (data) => {
       console.log("Session started successfully:", data);
+      console.log("Setting session data and transitioning to riddle");
       setSessionData(data);
       setCurrentStep("riddle");
+      console.log("Current step should now be riddle");
     },
     onError: (error) => {
       console.error("Failed to start oracle session:", error);

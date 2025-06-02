@@ -22,6 +22,9 @@ export default function Home() {
     resetJourney,
   } = useOracleSession();
 
+  console.log("Current step:", currentStep);
+  console.log("Session data:", sessionData);
+
   return (
     <div className="min-h-screen cosmic-gradient relative overflow-hidden">
       {/* Cosmic background effects */}
