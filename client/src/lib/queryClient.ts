@@ -12,12 +12,33 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const headers: HeadersInit = {}; // Initialize headers object
+  let bodyToSend: BodyInit | undefined = undefined;
+
+  // Always set Content-Type for POST, PUT, PATCH and send an empty JSON body if no data
+  if (method === "POST" || method === "PUT" || method === "PATCH") {
+    headers["Content-Type"] = "application/json";
+    bodyToSend = data ? JSON.stringify(data) : JSON.stringify({}); // Send {} if no data
+  } else if (data) {
+    // For other methods that might have data (though rare for GET)
+    headers["Content-Type"] = "application/json";
+    bodyToSend = JSON.stringify(data);
+  }
+
+  // 'credentials: "include"' is important for sessions/cookies if you use them later,
+  // but not directly related to this 400 error unless Netlify has specific requirements.
+  // For now, let's keep it as you had it, assuming it might be needed for other parts.
+  const fetchOptions: RequestInit = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
     credentials: "include",
-  });
+  };
+
+  if (bodyToSend !== undefined) {
+    fetchOptions.body = bodyToSend;
+  }
+
+  const res = await fetch(url, fetchOptions);
 
   await throwIfResNotOk(res);
   return res;
