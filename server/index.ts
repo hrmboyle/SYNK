@@ -2,7 +2,14 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Your temporary console log to test
+
+
 const app = express();
+console.log("GEMINI_API_KEY from .env after dotenv config:", process.env.GEMINI_API_KEY);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

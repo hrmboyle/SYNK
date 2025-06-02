@@ -1,61 +1,98 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 
 interface CardScreenProps {
   onSubmit: (cardValue: string) => void;
 }
 
-const suits = ['H', 'D', 'C', 'S']; // Hearts, Diamonds, Clubs, Spades
-const values = [
-  'A',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10',
-  'J',
-  'Q',
-  'K',
+// Tarot Deck Data
+const majorArcana = [
+  'The Fool',
+  'The Magician',
+  'The High Priestess',
+  'The Empress',
+  'The Emperor',
+  'The Hierophant',
+  'The Lovers',
+  'The Chariot',
+  'Strength',
+  'The Hermit',
+  'Wheel of Fortune',
+  'Justice',
+  'The Hanged Man',
+  'Death',
+  'Temperance',
+  'The Devil',
+  'The Tower',
+  'The Star',
+  'The Moon',
+  'The Sun',
+  'Judgement',
+  'The World',
 ];
 
-// Generate all 52 cards
-const generateCards = () => {
-  const cards = [];
-  for (const suit of suits) {
-    for (const value of values) {
-      cards.push(`${value}${suit}`);
+const minorArcanaSuits = ['Wands', 'Cups', 'Swords', 'Pentacles'];
+const minorArcanaRanks = [
+  'Ace',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Page',
+  'Knight',
+  'Queen',
+  'King',
+];
+
+const generateTarotDeck = () => {
+  const deck = [...majorArcana];
+  for (const suit of minorArcanaSuits) {
+    for (const rank of minorArcanaRanks) {
+      deck.push(`${rank} of ${suit}`);
     }
   }
-  return cards;
+  return deck;
 };
 
 export function CardScreen({ onSubmit }: CardScreenProps) {
-  const [cards] = useState(generateCards());
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [tarotDeck] = useState(generateTarotDeck());
+  const [currentCardName, setCurrentCardName] = useState(tarotDeck[0]);
   const [isRunning, setIsRunning] = useState(true);
+  const [cardStopped, setCardStopped] = useState(false);
 
+  // Effect for cycling cards
   useEffect(() => {
     if (!isRunning) return;
 
     const interval = setInterval(() => {
-      // Pick a random card index
-      setCurrentCardIndex(Math.floor(Math.random() * cards.length));
-    }, 100);
+      const randomIndex = Math.floor(Math.random() * tarotDeck.length);
+      setCurrentCardName(tarotDeck[randomIndex]);
+    }, 120); // Speed of card name cycling, slightly slower for readability
 
     return () => clearInterval(interval);
-  }, [isRunning, cards.length]);
+  }, [isRunning, tarotDeck]);
 
-  const handleStop = () => {
-    setIsRunning(false);
-  };
+  // Effect to handle auto-submission after card stops
+  useEffect(() => {
+    if (cardStopped) {
+      const timer = setTimeout(() => {
+        onSubmit(currentCardName); // Submit the name of the Tarot card
+      }, 1800); // 1.8-second delay to see the card before submitting
 
-  const handleSubmit = () => {
-    onSubmit(cards[currentCardIndex]);
+      return () => clearTimeout(timer);
+    }
+  }, [cardStopped, currentCardName, onSubmit]);
+
+  const handleCardClick = () => {
+    if (isRunning) {
+      setIsRunning(false);
+      setCardStopped(true);
+    }
   };
 
   return (
@@ -73,38 +110,73 @@ export function CardScreen({ onSubmit }: CardScreenProps) {
             transition={{ delay: 0.2 }}
             className='space-y-8'
           >
+            {/* Instruction Text */}
+            <motion.p
+              className='text-lg text-cosmic-300 mb-4'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isRunning ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+            ></motion.p>
+
             {/* Card Display */}
             <div className='flex justify-center'>
               <motion.div
-                className='w-32 h-48 bg-cosmic-800 border-2 border-mystical-gold rounded-xl flex items-center justify-center'
-                animate={isRunning ? { scale: [1, 1.05, 1] } : {}}
-                transition={{ duration: 0.1, repeat: isRunning ? Infinity : 0 }}
+                className={`w-40 h-64 bg-cosmic-800 border-2 border-mystical-gold rounded-xl flex flex-col items-center justify-center p-4 text-center ${
+                  isRunning ? 'cursor-pointer' : 'cursor-default'
+                }`}
+                onClick={handleCardClick}
+                animate={
+                  isRunning
+                    ? {
+                        // Simple visual effect for "shuffling" names
+                        opacity: [0.7, 1, 0.7],
+                        scale: [1, 1.03, 1],
+                      }
+                    : {
+                        scale: 1.1, // Slightly larger when stopped
+                        boxShadow:
+                          '0px 0px 15px 5px hsl(var(--mystical-gold) / 0.7)', // Add a stronger glow when stopped
+                      }
+                }
+                transition={
+                  isRunning
+                    ? {
+                        opacity: { duration: 0.15, repeat: Infinity },
+                        scale: { duration: 0.15, repeat: Infinity },
+                      }
+                    : {
+                        duration: 0.3,
+                        ease: 'easeOut',
+                      }
+                }
+                whileHover={
+                  isRunning
+                    ? {
+                        scale: 1.05,
+                        boxShadow:
+                          '0px 0px 20px 3px hsl(var(--mystical-gold) / 0.5)',
+                      }
+                    : {}
+                }
               >
-                <span className='text-2xl font-bold text-mystical-pearl'>
-                  {cards[currentCardIndex]}
+                {/* Display Tarot card name */}
+                <span
+                  className={`text-xl font-semibold text-mystical-pearl ${
+                    !isRunning ? 'tracking-wide' : ''
+                  }`}
+                >
+                  {currentCardName}
                 </span>
               </motion.div>
             </div>
 
-            {isRunning ? (
-              <Button
-                onClick={handleStop}
-                className='w-full answer-button p-4 rounded-xl font-medium text-mystical-gold hover:text-mystical-lightGold transition-all'
-              >
-                Stop
-              </Button>
-            ) : (
-              <div className='space-y-4'>
-                <p className='text-cosmic-200'>
-                  Card selected: {cards[currentCardIndex]}
-                </p>
-                <Button
-                  onClick={handleSubmit}
-                  className='w-full answer-button p-4 rounded-xl font-medium text-mystical-gold hover:text-mystical-lightGold transition-all'
-                >
-                  Continue
-                </Button>
-              </div>
+            {!isRunning && cardStopped && (
+              <motion.p
+                className='text-cosmic-200 mt-4'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+              ></motion.p>
             )}
           </motion.div>
         </div>

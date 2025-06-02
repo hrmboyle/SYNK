@@ -1,25 +1,22 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
-import { storage } from "./storage";
-import { 
-  generateRiddle, 
-  generateSigils, 
-  generateMantraAndPoem, 
-  generateSongPrompt 
-} from "./lib/openai";
-import { insertOracleSessionSchema, updateOracleSessionSchema } from "@shared/schema";
+import { storage } from "./storage"; // Assuming storage.ts uses tarotCardSvgString
+import {
+  generateRiddle,
+  generateSigils,
+  generateMantraAndPoem,
+  generateSongPrompt,
+  generateTarotCardImage
+} from "./lib/openai"; // Assuming generateTarotCardImage returns SVG string
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
-  // Start a new oracle session
+
   app.post("/api/oracle/start", async (req, res) => {
     try {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Generate initial riddle
       const { riddle, answers } = await generateRiddle();
-      
+
       const newSession = await storage.createOracleSession({
         sessionId,
         riddleText: riddle,
@@ -27,10 +24,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedRiddleAnswer: null,
         sigilChoices: null,
         selectedSigil: null,
-        weatherInput: null,
-        generatedMantra: null,
-        generatedPoem: null,
+        cardValue: null,
+        mantra: null,
+        poem: null,
         songPrompt: null,
+        tarotCardSvgString: null, // CHANGED: Initialize tarotCardSvgString
+        // tarotCardImageUrl: null, // REMOVED or REPURPOSED: Original initialization
         completed: false,
       });
 
@@ -41,13 +40,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error starting oracle session:", error);
-      res.status(500).json({ 
-        message: "Failed to start oracle session. Please check your OpenAI API configuration." 
+      res.status(500).json({
+        message: "Failed to start oracle session. Please check your AI API configuration."
       });
     }
   });
 
-  // Submit riddle answer and get sigil options
   app.post("/api/oracle/riddle-answer", async (req, res) => {
     try {
       const { sessionId, answer } = z.object({
@@ -60,9 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Session not found" });
       }
 
-      // Generate sigils based on the riddle answer
       const sigils = await generateSigils(answer);
-
       const updated = await storage.updateOracleSession(sessionId, {
         selectedRiddleAnswer: answer,
         sigilChoices: sigils,
@@ -73,18 +69,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error processing riddle answer:", error);
-      res.status(500).json({ 
-        message: "Failed to process riddle answer. Please try again." 
+      res.status(500).json({
+        message: "Failed to process riddle answer. Please try again."
       });
     }
   });
 
-  // Submit sigil selection
   app.post("/api/oracle/sigil-selection", async (req, res) => {
     try {
       const { sessionId, sigil } = z.object({
         sessionId: z.string(),
-        sigil: z.string(),
+        sigil: z.string(), // This is the SVG string of the selected sigil
       }).parse(req.body);
 
       const session = await storage.getOracleSession(sessionId);
@@ -99,101 +94,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error("Error processing sigil selection:", error);
-      res.status(500).json({ 
-        message: "Failed to process sigil selection. Please try again." 
+      res.status(500).json({
+        message: "Failed to process sigil selection. Please try again."
       });
     }
   });
 
-  // Complete journey with weather input and generate final results
   app.post("/api/oracle/complete", async (req, res) => {
     try {
-      const { sessionId, weatherInput } = z.object({
+      const { sessionId, cardValue } = z.object({ // cardValue is the Tarot card name
         sessionId: z.string(),
-        weatherInput: z.string(),
+        cardValue: z.string(),
       }).parse(req.body);
 
       const session = await storage.getOracleSession(sessionId);
       if (!session || !session.selectedRiddleAnswer || !session.selectedSigil) {
-        return res.status(400).json({ 
-          message: "Incomplete session. Please complete all previous steps." 
+        return res.status(400).json({
+          message: "Incomplete session. Please complete all previous steps."
         });
       }
 
-      // Generate mantra and poem based on all user inputs
-      const { mantra, poem } = await generateMantraAndPoem(
+      // Generate Tarot card SVG string
+      const tarotCardSvgString = await generateTarotCardImage(cardValue);
+      console.log("Generated Tarot Card SVG Data:", tarotCardSvgString ? tarotCardSvgString.substring(0, 100) + "..." : "null");
+
+
+      const aiGeneratedContent = await generateMantraAndPoem(
         session.selectedRiddleAnswer,
-        session.selectedSigil,
-        weatherInput
+        session.selectedSigil, // This is the SVG string of the chosen sigil
+        cardValue // This is the Tarot card name
       );
 
-      // Generate song prompt for Suno
-      const songPrompt = await generateSongPrompt(
+      const aiGeneratedSongPrompt = await generateSongPrompt(
         session.selectedRiddleAnswer,
         session.selectedSigil,
-        weatherInput,
-        mantra
+        cardValue,
+        aiGeneratedContent.mantra
       );
 
-      const updated = await storage.updateOracleSession(sessionId, {
-        weatherInput,
-        generatedMantra: mantra,
-        generatedPoem: poem,
-        songPrompt,
+      const updateData = {
+        cardValue: cardValue,
+        mantra: aiGeneratedContent.mantra,
+        poem: aiGeneratedContent.poem,
+        songPrompt: aiGeneratedSongPrompt,
+        tarotCardSvgString: tarotCardSvgString, // SAVE with the correct key
         completed: true,
-      });
+      };
+
+      const updated = await storage.updateOracleSession(sessionId, updateData);
 
       res.json({
         sessionId: updated?.sessionId,
         riddleAnswer: updated?.selectedRiddleAnswer,
         selectedSigil: updated?.selectedSigil,
-        weatherInput: updated?.weatherInput,
-        mantra: updated?.generatedMantra,
-        poem: updated?.generatedPoem,
+        cardValue: updated?.cardValue,
+        mantra: updated?.mantra,
+        poem: updated?.poem,
         songPrompt: updated?.songPrompt,
+        tarotCardSvgString: updated?.tarotCardSvgString, // RETURN with the correct key
       });
     } catch (error) {
       console.error("Error completing oracle journey:", error);
-      res.status(500).json({ 
-        message: "Failed to complete your mystical journey. Please try again." 
+      res.status(500).json({
+        message: "Failed to complete your mystical journey. Please try again."
       });
     }
   });
 
-  // Get session details
   app.get("/api/oracle/session/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
       const session = await storage.getOracleSession(sessionId);
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
-
+      // Assuming `session` object from storage now correctly contains `tarotCardSvgString`
+      // if the schema and storage methods were updated.
       res.json(session);
     } catch (error) {
       console.error("Error retrieving session:", error);
-      res.status(500).json({ 
-        message: "Failed to retrieve session details." 
+      res.status(500).json({
+        message: "Failed to retrieve session details."
       });
     }
   });
 
-  // Get recent completed sessions (for sharing/browsing)
   app.get("/api/oracle/recent", async (req, res) => {
     try {
       const sessions = await storage.getRecentSessions(10);
       const completedSessions = sessions.filter(s => s.completed);
-      
-      res.json(completedSessions.map(session => ({
-        sessionId: session.sessionId,
-        mantra: session.generatedMantra,
-        createdAt: session.createdAt,
+
+      res.json(completedSessions.map(s => ({
+        sessionId: s.sessionId,
+        mantra: s.mantra,
+        createdAt: s.createdAt,
+        tarotCardSvgString: s.tarotCardSvgString, // CHANGED: Return tarotCardSvgString
+        selectedSigil: s.selectedSigil,
       })));
     } catch (error) {
       console.error("Error retrieving recent sessions:", error);
-      res.status(500).json({ 
-        message: "Failed to retrieve recent oracle readings." 
+      res.status(500).json({
+        message: "Failed to retrieve recent oracle readings."
       });
     }
   });

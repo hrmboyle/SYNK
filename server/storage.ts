@@ -1,18 +1,18 @@
-import { 
-  users, 
+import {
+  users,
   oracleSessions,
-  type User, 
+  type User,
   type InsertUser,
   type OracleSession,
   type InsertOracleSession,
   type UpdateOracleSession
-} from "@shared/schema";
+} from "@shared/schema"; // Assuming schema.ts is correctly updated to include tarotCardSvgString
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Oracle session methods
   createOracleSession(session: InsertOracleSession): Promise<OracleSession>;
   getOracleSession(sessionId: string): Promise<OracleSession | undefined>;
@@ -24,13 +24,13 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private oracleSessions: Map<string, OracleSession>;
   private currentUserId: number;
-  private currentSessionId: number;
+  private currentSessionId: number; // For internal ID, not the sessionId string
 
   constructor() {
     this.users = new Map();
     this.oracleSessions = new Map();
     this.currentUserId = 1;
-    this.currentSessionId = 1;
+    this.currentSessionId = 1; // Drizzle handles serial 'id' if using a real DB
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -51,15 +51,29 @@ export class MemStorage implements IStorage {
   }
 
   async createOracleSession(insertSession: InsertOracleSession): Promise<OracleSession> {
-    const id = this.currentSessionId++;
-    const session: OracleSession = {
-      ...insertSession,
-      id,
-      completed: false,
-      createdAt: new Date(),
+    const internalId = this.currentSessionId++; // For the map's internal ID if needed, or Drizzle's serial
+
+    // Ensure all fields from OracleSession type are present, defaulting nullables
+    const fullSessionData: OracleSession = {
+      id: internalId, // Drizzle handles this in a real DB
+      sessionId: insertSession.sessionId,
+      riddleText: insertSession.riddleText ?? null,
+      riddleAnswers: insertSession.riddleAnswers ?? null,
+      selectedRiddleAnswer: insertSession.selectedRiddleAnswer ?? null,
+      sigilChoices: insertSession.sigilChoices ?? null,
+      selectedSigil: insertSession.selectedSigil ?? null,
+      cardValue: insertSession.cardValue ?? null,
+      mantra: insertSession.mantra ?? null,
+      poem: insertSession.poem ?? null,
+      songPrompt: insertSession.songPrompt ?? null,
+      tarotCardSvgString: insertSession.tarotCardSvgString ?? null, // CHANGED: Initialize tarotCardSvgString
+      // tarotCardImageUrl: insertSession.tarotCardImageUrl ?? null, // REMOVED or REPURPOSED: Original line for tarotCardImageUrl
+      completed: insertSession.completed ?? false,
+      createdAt: new Date(), // Drizzle handles defaultNow in a real DB
     };
-    this.oracleSessions.set(insertSession.sessionId, session);
-    return session;
+
+    this.oracleSessions.set(insertSession.sessionId, fullSessionData);
+    return fullSessionData;
   }
 
   async getOracleSession(sessionId: string): Promise<OracleSession | undefined> {
@@ -70,12 +84,21 @@ export class MemStorage implements IStorage {
     const existing = this.oracleSessions.get(sessionId);
     if (!existing) return undefined;
 
-    const updated: OracleSession = {
+    // Create a new object for the updated session to ensure type compatibility
+    // and to handle partial updates correctly.
+    // This will work for tarotCardSvgString if UpdateOracleSession type is correct.
+    const updatedSession: OracleSession = {
       ...existing,
       ...updates,
+      // Ensure fields not in Partial<UpdateOracleSession> but in OracleSession retain their values
+      // or are handled if they can be derived/changed during an update.
+      // For example, if `id` or `createdAt` should not change on update:
+      id: existing.id,
+      createdAt: existing.createdAt,
     };
-    this.oracleSessions.set(sessionId, updated);
-    return updated;
+
+    this.oracleSessions.set(sessionId, updatedSession);
+    return updatedSession;
   }
 
   async getRecentSessions(limit: number = 10): Promise<OracleSession[]> {
