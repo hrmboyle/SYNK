@@ -5,10 +5,11 @@ import { storage } from "./storage";
 import {
   generateRiddle,
   generateSigils,
-  generateMantra, // Changed from generateMantraAndPoem
-  // generateSongPrompt, // Remains commented out
-  generateTarotCardImage
+  generateMantra,
+  generateTarotCardImage,
+  generateAsciiArtForCard // Correctly imported
 } from "./lib/openai";
+import type { UpdateOracleSession } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
@@ -26,9 +27,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedSigil: null,
         cardValue: null,
         mantra: null,
-        poem: null, // Poem field is still in the schema, will be null
+        poem: null,
         songPrompt: null,
         tarotCardSvgString: null,
+        asciiArt: null, // Correctly initialized as asciiArt
         completed: false,
       });
 
@@ -116,37 +118,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tarotCardSvgString = await generateTarotCardImage(cardValue);
       console.log("Generated Tarot Card SVG Data:", tarotCardSvgString ? tarotCardSvgString.substring(0, 100) + "..." : "null");
 
-      // Call the updated generateMantra function
+      const asciiArtContent = await generateAsciiArtForCard(cardValue); // Renamed variable for clarity
+      console.log("Generated ASCII Art Content:", asciiArtContent ? asciiArtContent.substring(0, 100) + "..." : "null");
+
+
       const aiGeneratedContent = await generateMantra(
         session.selectedRiddleAnswer,
         session.selectedSigil,
         cardValue
       );
 
-      // const aiGeneratedSongPrompt = await generateSongPrompt( // Remains commented out
-      //   session.selectedRiddleAnswer,
-      //   session.selectedSigil,
-      //   cardValue,
-      //   aiGeneratedContent.mantra
-      // );
-
-      const updateData: Partial<import("@shared/schema").UpdateOracleSession> = { // Ensure type is correct
+      const updateData: Partial<UpdateOracleSession> = {
         cardValue: cardValue,
         mantra: aiGeneratedContent.mantra,
-        // poem: null, // Explicitly set poem to null or remove if schema changes
-        // songPrompt: aiGeneratedSongPrompt, // Remains commented out
         tarotCardSvgString: tarotCardSvgString,
+        asciiArt: asciiArtContent, // <-- USE asciiArt field name
         completed: true,
+        poem: null, 
       };
       
-      // If you decide to remove `poem` from the schema later, remove it from updateData too.
-      // For now, if `poem` can be null in your schema, this will effectively clear it
-      // or you can explicitly set `poem: null` if the schema still requires the field.
-      // If the schema changes to remove `poem`, this line in updateData should be removed.
-      if ('poem' in updateData) { // Or a more direct check if you know the schema will still have it.
-          (updateData as any).poem = null; // Setting poem to null
+      // This if-block for poem is fine, ensures it's explicitly null if present.
+      if ('poem' in updateData) {
+          (updateData as any).poem = null;
       }
-
 
       const updated = await storage.updateOracleSession(sessionId, updateData);
 
@@ -156,9 +150,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedSigil: updated?.selectedSigil,
         cardValue: updated?.cardValue,
         mantra: updated?.mantra,
-        // poem: updated?.poem, // Remove poem from the response
-        songPrompt: updated?.songPrompt, // This will be null if generateSongPrompt is commented out
+        poem: updated?.poem, 
+        songPrompt: updated?.songPrompt,
         tarotCardSvgString: updated?.tarotCardSvgString,
+        asciiArt: updated?.asciiArt, // <-- INCLUDE asciiArt IN RESPONSE
       });
     } catch (error) {
       console.error("Error completing oracle journey:", error);
@@ -171,11 +166,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/oracle/session/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const session = await storage.getOracleSession(sessionId);
-      if (!session) {
+      const sessionData = await storage.getOracleSession(sessionId);
+      if (!sessionData) {
         return res.status(404).json({ message: "Session not found" });
       }
-      res.json(session);
+      res.json({
+        ...sessionData,
+        asciiArt: sessionData.asciiArt ?? null // <-- USE asciiArt
+      });
     } catch (error) {
       console.error("Error retrieving session:", error);
       res.status(500).json({
@@ -195,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: s.createdAt,
         tarotCardSvgString: s.tarotCardSvgString,
         selectedSigil: s.selectedSigil,
-        // poem: s.poem // Remove poem from recent sessions response
+        asciiArt: s.asciiArt ?? null, // <-- INCLUDE asciiArt
       })));
     } catch (error) {
       console.error("Error retrieving recent sessions:", error);

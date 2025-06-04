@@ -159,6 +159,76 @@ export async function generateMantra( // Renamed function and changed return typ
   }
 }
 
+
+export async function generateAsciiArtForCard(cardName: string): Promise<string> {
+  try {
+    const prompt = `Generate a simple, abstract, and mystical piece of ASCII art representing the Tarot card '${cardName}'.
+The art should be purely text-based.
+The art should be designed to fit neatly within a block approximately 40 characters wide and 20 lines high. Do not exceed these dimensions.
+Use characters like | - / \\ _ , . : ; ' " ( ) [ ] { } < > ! @ # $ % ^ & * + = ~ \` to create the art.
+Return JSON with a key "asciiArtLines" containing an ARRAY of strings, where each string in the array is one line of the ASCII art.
+
+For example, for "The Star":
+{
+  "asciiArtLines": [
+    "    .",
+    "   /|\\",
+    "  /_|_\\",
+    "   /|*|\\",
+    "  /_|*_\\",
+    " /_ |*_\\",
+    " \\\\_|_|_/",
+    "  /_ _ _\\",
+    " (_______)"
+  ]
+}
+
+Focus on abstract symbolism rather than detailed illustration.
+Ensure the response is only the JSON object. The art should not contain any HTML or CSS.`;
+
+    console.log("Attempting to generate ASCII art for card:", cardName);
+
+    const result = await textModel.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    console.log("Raw AI response for ASCII art:", text);
+
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/);
+    if (jsonMatch) {
+      const jsonString = jsonMatch[1] || jsonMatch[2];
+      const parsed = JSON.parse(jsonString);
+      // Expect an array of strings now
+      if (parsed.asciiArtLines && Array.isArray(parsed.asciiArtLines) && parsed.asciiArtLines.every((line: any) => typeof line === 'string')) {
+        return parsed.asciiArtLines.join('\n'); // Join lines into a single string
+      }
+    }
+
+    console.warn("AI did not return valid ASCII art (array of lines), using fallback.");
+    const fallbackArt = `
++------------------+
+|                  |
+|   [Fallback]     |
+|       for        |
+|   ${cardName.padEnd(14).substring(0, 14)}   |
+|                  |
++------------------+
+`;
+    return fallbackArt.trim();
+  } catch (error) {
+    console.error("Error in generateAsciiArtForCard function (or parsing its response):", error);
+    const errorArt = `
++------------------+
+|                  |
+|  Error Generating |
+|       Art        |
+|   ${cardName.padEnd(14).substring(0, 14)}   |
+|                  |
++------------------+
+`;
+    return errorArt.trim();
+  }
+}
 // generateSongPrompt function remains commented out as per your previous changes
 // export async function generateSongPrompt(
 //   riddleAnswer: string,

@@ -67,6 +67,8 @@ export class MemStorage implements IStorage {
       poem: insertSession.poem ?? null,
       songPrompt: insertSession.songPrompt ?? null,
       tarotCardSvgString: insertSession.tarotCardSvgString ?? null, // CHANGED: Initialize tarotCardSvgString
+       asciiArt: insertSession.asciiArt ?? null, // <-- RENAMED AND INITIALIZE NEW FIELD
+
       // tarotCardImageUrl: insertSession.tarotCardImageUrl ?? null, // REMOVED or REPURPOSED: Original line for tarotCardImageUrl
       completed: insertSession.completed ?? false,
       createdAt: new Date(), // Drizzle handles defaultNow in a real DB

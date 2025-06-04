@@ -1,13 +1,11 @@
 import { apiRequest } from "./queryClient";
 
-
-
-
-export interface OracleSession { // This type might be for the GET /api/oracle/session/:sessionId endpoint
+// This interface is likely for the GET /api/oracle/session/:sessionId endpoint
+// and other places where the full session state is handled on the client.
+export interface OracleSession {
   sessionId: string;
-  riddle: string; // This should be riddleText from the backend
-  answers: string[]; // This should be riddleAnswers from the backend
-  // Add other fields if this is meant to represent the full session state from DB
+  riddleText?: string; // Matches backend field 'riddleText'
+  riddleAnswers?: string[]; // Matches backend field 'riddleAnswers'
   selectedRiddleAnswer?: string | null;
   sigilChoices?: string[] | null;
   selectedSigil?: string | null;
@@ -15,14 +13,16 @@ export interface OracleSession { // This type might be for the GET /api/oracle/s
   mantra?: string | null;
   poem?: string | null;
   songPrompt?: string | null;
-  tarotCardImageUrl?: string | null;
+  tarotCardSvgString?: string | null; // tarotCardImageUrl was renamed to tarotCardSvgString
+  asciiArt?: string | null; // <-- ADDED to match backend
   completed?: boolean;
+  createdAt?: string; // Consider if you need this on the client and its type (string vs Date)
 }
 
-export interface StartOracleSessionResponse { // Renamed from OracleSession to be specific
+export interface StartOracleSessionResponse {
   sessionId: string;
-  riddle: string;
-  answers: string[];
+  riddle: string; // This is 'riddleText' from the backend session
+  answers: string[]; // This is 'riddleAnswers' from the backend session
 }
 
 
@@ -34,16 +34,19 @@ export interface CompleteJourneyResponse {
   sessionId: string;
   riddleAnswer: string | null;
   selectedSigil: string | null;
-  cardValue: string | null; // This is the Tarot card name
+  cardValue: string | null;
   mantra: string | null;
   poem: string | null;
   songPrompt: string | null;
-  tarotCardImageUrl?: string | null;
-  tarotCardSvgString?: string | null; // <--- Ensure this line is present and correct
+  tarotCardSvgString?: string | null;
+  asciiArt?: string | null; // <-- Correctly added
 }
 
 export async function startOracleSession(): Promise<StartOracleSessionResponse> {
   const response = await apiRequest("POST", "/api/oracle/start");
+  // The backend for /api/oracle/start returns { sessionId, riddle, answers }
+  // where 'riddle' is session.riddleText and 'answers' is session.riddleAnswers.
+  // This matches StartOracleSessionResponse.
   return await response.json();
 }
 
@@ -58,12 +61,11 @@ export async function submitRiddleAnswer(sessionId: string, answer: string): Pro
 export async function submitSigilSelection(sessionId: string, sigil: string): Promise<{ success: boolean }> {
   const response = await apiRequest("POST", "/api/oracle/sigil-selection", {
     sessionId,
-    sigil, // This is the SVG string of the selected sigil
+    sigil,
   });
   return await response.json();
 }
 
-// cardValue here is the Tarot card name
 export async function completeJourney(sessionId: string, cardValue: string): Promise<CompleteJourneyResponse> {
   const response = await apiRequest("POST", "/api/oracle/complete", {
     sessionId,
@@ -72,7 +74,8 @@ export async function completeJourney(sessionId: string, cardValue: string): Pro
   return await response.json();
 }
 
-export async function getSession(sessionId: string): Promise<OracleSession> { // Returns the full session
+// This function expects the full OracleSession object from the backend
+export async function getSession(sessionId: string): Promise<OracleSession> {
   const response = await apiRequest("GET", `/api/oracle/session/${sessionId}`);
   return await response.json();
 }
