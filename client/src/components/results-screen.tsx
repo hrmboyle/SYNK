@@ -269,7 +269,7 @@ export function ResultsScreen({
             }}
             className='px-8 py-3 bg-mystical-gold text-cosmic-900 font-semibold rounded-lg shadow-md hover:bg-mystical-lightGold transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-mystical-pearl focus:ring-offset-2 focus:ring-offset-cosmic-800 text-2xl'
           >
-            🔄
+            ↺
           </button>
         </motion.div>
       </div>
