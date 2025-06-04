@@ -6,9 +6,6 @@ if (process.env.IS_LOCAL_SERVER === 'true') {
   dotenv.config();
 }
 
-// dotenv.config() // This line was duplicated, ensure it's only called if needed or once globally.
-                // If IS_LOCAL_SERVER check above handles it, this might be redundant.
-                // For now, I'll keep it as it was in your provided snippet, but it's worth reviewing.
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
@@ -121,19 +118,20 @@ export async function generateTarotCardImage(cardName: string): Promise<string |
   }
 }
 
-// Modified function to only generate a mantra
-export async function generateMantra( // Renamed function and changed return type
+export async function generateMantra(
   riddleAnswer: string,
-  selectedSigil: string,
-  cardValue: string // This is the Tarot card name
-): Promise<{ mantra: string }> { // Return type only contains mantra
+  selectedSigil: string, // This is an SVG string
+  cardValue: string
+): Promise<{ mantra: string }> {
   try {
+    // Use a placeholder for the sigil in the prompt for brevity and clarity
+    const sigilDescription = "a chosen mystical sigil";
     const prompt = `Based on these elements:
     - Riddle answer: "${riddleAnswer}"
-    - Chosen sigil: A visual symbol (represented by a short SVG description like "${selectedSigil.substring(0, 50)}...")
+    - Chosen sigil: ${sigilDescription}
     - Card drawn: "${cardValue}" (e.g., The Fool, Ace of Wands)
 
-    Create a mantra (4-6 lines, poetic, uplifting) that weaves these elements together. Avoid using "you" or "your" - focus on universal themes and timeless wisdom. Return JSON with a 'mantra' string.`; // Updated prompt
+    Create a mantra (4-6 lines, poetic, uplifting) that weaves these elements together. Avoid using "you" or "your" - focus on universal themes and timeless wisdom. Return JSON with a 'mantra' string.`;
 
     const result = await textModel.generateContent(prompt);
     const response = await result.response;
@@ -143,17 +141,17 @@ export async function generateMantra( // Renamed function and changed return typ
     if (jsonMatch) {
       const jsonString = jsonMatch[1] || jsonMatch[2];
       const parsed = JSON.parse(jsonString);
-      return { // Return only mantra
+      return {
         mantra: parsed.mantra || "In the sacred dance of light and shadow, truth emerges."
       };
     }
 
-    return { // Fallback only for mantra
+    return {
       mantra: "In balance and wisdom, the path unfolds."
     };
   } catch (error) {
-    console.error("Error generating mantra:", error); // Updated error message
-    return { // Fallback only for mantra
+    console.error("Error generating mantra:", error);
+    return {
       mantra: "In balance and wisdom, the path unfolds."
     };
   }
@@ -198,9 +196,8 @@ Ensure the response is only the JSON object. The art should not contain any HTML
     if (jsonMatch) {
       const jsonString = jsonMatch[1] || jsonMatch[2];
       const parsed = JSON.parse(jsonString);
-      // Expect an array of strings now
       if (parsed.asciiArtLines && Array.isArray(parsed.asciiArtLines) && parsed.asciiArtLines.every((line: any) => typeof line === 'string')) {
-        return parsed.asciiArtLines.join('\n'); // Join lines into a single string
+        return parsed.asciiArtLines.join('\n');
       }
     }
 
@@ -229,12 +226,107 @@ Ensure the response is only the JSON object. The art should not contain any HTML
     return errorArt.trim();
   }
 }
-// generateSongPrompt function remains commented out as per your previous changes
-// export async function generateSongPrompt(
-//   riddleAnswer: string,
-//   selectedSigil: string,
-//   cardValue: string, // Tarot card name
-//   mantra: string
-// ): Promise<string> {
-//   // ... implementation ...
-// }
+
+// NEW FUNCTION to generate Tone.js code
+export async function generateSoundCode(
+  riddleAnswer: string,
+  selectedSigilSVG: string, // The actual SVG string, though we'll use a description in the prompt
+  cardValue: string,
+  mantra: string
+): Promise<string | null> {
+  try {
+    // For the prompt, it's better to use a description of the sigil
+    // rather than the full SVG, which can be very long.
+    const sigilDescription = "a user-selected abstract mystical sigil";
+
+    const prompt = `Based on these mystical inputs:
+- Riddle Answer: "${riddleAnswer}"
+- Sigil Theme: Reflects ${sigilDescription}
+- Tarot Card: "${cardValue}"
+- Mantra: "${mantra}"
+
+Generate a JavaScript code snippet using Tone.js (version 14.x or compatible) that creates a unique, looping, ambient soundscape or a short musical motif (around 15-30 seconds per loop). The sound should evoke a sense of mystery, contemplation, or insight related to the inputs.
+
+The code must:
+1.  Be self-contained and executable in a browser environment where Tone.js (as 'Tone') is globally available.
+2.  Create and start a loop (e.g., using \`new Tone.Loop(callback, interval).start(0)\` or \`Tone.Transport.scheduleRepeat(callback, interval)\`).
+3.  Define its main sound elements (synths, players, effects etc.) and assign them to variables (e.g., \`const synth = ...;\`).
+4.  The sound should loop indefinitely until explicitly stopped by external controls (e.g., by calling \`Tone.Transport.stop()\` and disposing of created Tone.js objects).
+5.  If using \`Tone.Transport.scheduleRepeat\`, DO NOT call \`Tone.Transport.start()\` within this generated code snippet. The calling environment will handle starting the Transport. If using \`Tone.Loop(...).start(0)\`, this is acceptable as it links to the Transport.
+6.  The generated code should be purely JavaScript for Tone.js, enclosed in a standard JavaScript code block. Do not include any other text, explanations, or JSON formatting around the code block itself.
+
+Output ONLY the JavaScript code block.
+
+Example of a valid structural output:
+\`\`\`javascript
+const synth = new Tone.FMSynth({
+  harmonicity: 1.2,
+  modulationIndex: 5,
+  envelope: { attack: 0.2, decay: 0.5, sustain: 0.1, release: 1 },
+  modulationEnvelope: { attack: 0.1, decay: 0.3, sustain: 0.05, release: 0.5 }
+}).toDestination();
+synth.volume.value = -12; // Quieter volume
+
+const filter = new Tone.AutoFilter("2n").toDestination().start();
+synth.connect(filter);
+
+const loop = new Tone.Loop(time => {
+  const notes = ["C3", "Eb3", "G3", "Bb3"];
+  const note = notes[Math.floor(Math.random() * notes.length)];
+  synth.triggerAttackRelease(note, "2n", time);
+}, "1m").start(0);
+
+// The calling environment will handle Tone.Transport.start()/stop()
+// and disposing: loop.dispose(); synth.dispose(); filter.dispose();
+\`\`\`
+`;
+
+    console.log("Attempting to generate sound code with prompt for card:", cardValue);
+    const result = await textModel.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    console.log("Raw AI response for sound code:", text);
+
+    // Extract JavaScript code block
+    const jsMatch = text.match(/```javascript\s*([\s\S]*?)\s*```/);
+    if (jsMatch && jsMatch[1]) {
+      console.log("Extracted sound code:", jsMatch[1]);
+      return jsMatch[1].trim();
+    }
+
+    // Fallback if no ```javascript ``` block is found, try to find raw code
+    // This is less reliable but can be a fallback.
+    const rawCodeMatch = text.match(/^(?:const|let|var|new Tone\.|Tone\.Transport)/m);
+    if (rawCodeMatch) {
+        const potentialCode = text.substring(rawCodeMatch.index || 0);
+        // Very basic validation: check for common Tone.js keywords
+        if (potentialCode.includes("Tone.") && (potentialCode.includes("Synth") || potentialCode.includes("Loop") || potentialCode.includes("Transport"))) {
+            console.warn("Found sound code without standard markdown block, attempting to use as is.");
+            return potentialCode.trim();
+        }
+    }
+
+
+    console.warn("AI did not return valid JavaScript code for sound, using fallback.");
+    // Fallback Tone.js code
+    return `
+const synth = new Tone.Synth().toDestination();
+const loop = new Tone.Loop(time => {
+  synth.triggerAttackRelease("C4", "8n", time);
+}, "4n").start(0);
+// Calling environment handles Tone.Transport.start()
+    `.trim();
+
+  } catch (error) {
+    console.error("Error in generateSoundCode function:", error);
+    // Fallback Tone.js code in case of error
+    return `
+const synth = new Tone.Synth().toDestination();
+const loop = new Tone.Loop(time => {
+  synth.triggerAttackRelease("E4", "4n", time);
+}, "2n").start(0);
+// Calling environment handles Tone.Transport.start()
+    `.trim();
+  }
+}

@@ -6,7 +6,7 @@ import {
   type OracleSession,
   type InsertOracleSession,
   type UpdateOracleSession
-} from "@shared/schema"; // Assuming schema.ts is correctly updated to include tarotCardSvgString
+} from "@shared/schema"; // This correctly imports the updated types
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -22,15 +22,15 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
-  private oracleSessions: Map<string, OracleSession>;
+  private oracleSessions: Map<string, OracleSession>; // This will use the updated OracleSession type
   private currentUserId: number;
-  private currentSessionId: number; // For internal ID, not the sessionId string
+  private currentSessionId: number;
 
   constructor() {
     this.users = new Map();
     this.oracleSessions = new Map();
     this.currentUserId = 1;
-    this.currentSessionId = 1; // Drizzle handles serial 'id' if using a real DB
+    this.currentSessionId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -51,11 +51,10 @@ export class MemStorage implements IStorage {
   }
 
   async createOracleSession(insertSession: InsertOracleSession): Promise<OracleSession> {
-    const internalId = this.currentSessionId++; // For the map's internal ID if needed, or Drizzle's serial
+    const internalId = this.currentSessionId++;
 
-    // Ensure all fields from OracleSession type are present, defaulting nullables
     const fullSessionData: OracleSession = {
-      id: internalId, // Drizzle handles this in a real DB
+      id: internalId,
       sessionId: insertSession.sessionId,
       riddleText: insertSession.riddleText ?? null,
       riddleAnswers: insertSession.riddleAnswers ?? null,
@@ -66,12 +65,11 @@ export class MemStorage implements IStorage {
       mantra: insertSession.mantra ?? null,
       poem: insertSession.poem ?? null,
       songPrompt: insertSession.songPrompt ?? null,
-      tarotCardSvgString: insertSession.tarotCardSvgString ?? null, // CHANGED: Initialize tarotCardSvgString
-       asciiArt: insertSession.asciiArt ?? null, // <-- RENAMED AND INITIALIZE NEW FIELD
-
-      // tarotCardImageUrl: insertSession.tarotCardImageUrl ?? null, // REMOVED or REPURPOSED: Original line for tarotCardImageUrl
+      tarotCardSvgString: insertSession.tarotCardSvgString ?? null,
+      asciiArt: insertSession.asciiArt ?? null,
+      soundCode: insertSession.soundCode ?? null, // <-- ADDED: Initialize soundCode
       completed: insertSession.completed ?? false,
-      createdAt: new Date(), // Drizzle handles defaultNow in a real DB
+      createdAt: new Date(),
     };
 
     this.oracleSessions.set(insertSession.sessionId, fullSessionData);
@@ -86,15 +84,10 @@ export class MemStorage implements IStorage {
     const existing = this.oracleSessions.get(sessionId);
     if (!existing) return undefined;
 
-    // Create a new object for the updated session to ensure type compatibility
-    // and to handle partial updates correctly.
-    // This will work for tarotCardSvgString if UpdateOracleSession type is correct.
+    // The spread operator will correctly handle the new 'soundCode' field if it's in 'updates'
     const updatedSession: OracleSession = {
       ...existing,
       ...updates,
-      // Ensure fields not in Partial<UpdateOracleSession> but in OracleSession retain their values
-      // or are handled if they can be derived/changed during an update.
-      // For example, if `id` or `createdAt` should not change on update:
       id: existing.id,
       createdAt: existing.createdAt,
     };

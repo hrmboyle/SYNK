@@ -7,7 +7,8 @@ import {
   generateSigils,
   generateMantra,
   generateTarotCardImage,
-  generateAsciiArtForCard // Correctly imported
+  // generateAsciiArtForCard, // <-- COMMENT OUT or REMOVE this import
+  generateSoundCode
 } from "./lib/openai";
 import type { UpdateOracleSession } from "@shared/schema";
 
@@ -30,7 +31,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         poem: null,
         songPrompt: null,
         tarotCardSvgString: null,
-        asciiArt: null, // Correctly initialized as asciiArt
+        asciiArt: null, // Can leave as null in storage for now
+        soundCode: null,
         completed: false,
       });
 
@@ -48,6 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/oracle/riddle-answer", async (req, res) => {
+    // ... (no changes here)
     try {
       const { sessionId, answer } = z.object({
         sessionId: z.string(),
@@ -77,6 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/oracle/sigil-selection", async (req, res) => {
+    // ... (no changes here)
     try {
       const { sessionId, sigil } = z.object({
         sessionId: z.string(),
@@ -118,29 +122,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tarotCardSvgString = await generateTarotCardImage(cardValue);
       console.log("Generated Tarot Card SVG Data:", tarotCardSvgString ? tarotCardSvgString.substring(0, 100) + "..." : "null");
 
-      const asciiArtContent = await generateAsciiArtForCard(cardValue); // Renamed variable for clarity
-      console.log("Generated ASCII Art Content:", asciiArtContent ? asciiArtContent.substring(0, 100) + "..." : "null");
+      // const asciiArtContent = await generateAsciiArtForCard(cardValue); // <-- COMMENT OUT or REMOVE
+      // console.log("Generated ASCII Art Content:", asciiArtContent ? asciiArtContent.substring(0, 100) + "..." : "null"); // <-- COMMENT OUT or REMOVE
 
-
-      const aiGeneratedContent = await generateMantra(
+      const aiGeneratedMantra = await generateMantra(
         session.selectedRiddleAnswer,
         session.selectedSigil,
         cardValue
       );
 
+      const soundCodeContent = await generateSoundCode(
+        session.selectedRiddleAnswer,
+        session.selectedSigil,
+        cardValue,
+        aiGeneratedMantra.mantra
+      );
+      console.log("Generated Sound Code:", soundCodeContent ? soundCodeContent.substring(0, 100) + "..." : "null");
+
       const updateData: Partial<UpdateOracleSession> = {
         cardValue: cardValue,
-        mantra: aiGeneratedContent.mantra,
+        mantra: aiGeneratedMantra.mantra,
         tarotCardSvgString: tarotCardSvgString,
-        asciiArt: asciiArtContent, // <-- USE asciiArt field name
+        // asciiArt: asciiArtContent, // <-- COMMENT OUT or REMOVE
+        soundCode: soundCodeContent,
         completed: true,
-        poem: null, 
+        poem: null,
       };
       
-      // This if-block for poem is fine, ensures it's explicitly null if present.
       if ('poem' in updateData) {
           (updateData as any).poem = null;
       }
+      // If you decide to remove asciiArt completely from the session object later, 
+      // you might set it explicitly to null or undefined here if the DB column still exists:
+      // updateData.asciiArt = null;
+
 
       const updated = await storage.updateOracleSession(sessionId, updateData);
 
@@ -150,10 +165,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedSigil: updated?.selectedSigil,
         cardValue: updated?.cardValue,
         mantra: updated?.mantra,
-        poem: updated?.poem, 
+        poem: updated?.poem,
         songPrompt: updated?.songPrompt,
         tarotCardSvgString: updated?.tarotCardSvgString,
-        asciiArt: updated?.asciiArt, // <-- INCLUDE asciiArt IN RESPONSE
+        // asciiArt: updated?.asciiArt, // <-- COMMENT OUT or REMOVE
+        soundCode: updated?.soundCode,
       });
     } catch (error) {
       console.error("Error completing oracle journey:", error);
@@ -170,9 +186,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!sessionData) {
         return res.status(404).json({ message: "Session not found" });
       }
+      // Create a new object for the response, excluding asciiArt if it's truly deprecated
+      const { asciiArt, ...responseSessionData } = sessionData;
       res.json({
-        ...sessionData,
-        asciiArt: sessionData.asciiArt ?? null // <-- USE asciiArt
+        ...responseSessionData,
+        // asciiArt: sessionData.asciiArt ?? null, // <-- COMMENT OUT or REMOVE
+        soundCode: sessionData.soundCode ?? null,
       });
     } catch (error) {
       console.error("Error retrieving session:", error);
@@ -187,14 +206,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessions = await storage.getRecentSessions(10);
       const completedSessions = sessions.filter(s => s.completed);
 
-      res.json(completedSessions.map(s => ({
-        sessionId: s.sessionId,
-        mantra: s.mantra,
-        createdAt: s.createdAt,
-        tarotCardSvgString: s.tarotCardSvgString,
-        selectedSigil: s.selectedSigil,
-        asciiArt: s.asciiArt ?? null, // <-- INCLUDE asciiArt
-      })));
+      res.json(completedSessions.map(s => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { asciiArt, ...rest } = s; // Destructure to exclude asciiArt
+        return {
+          ...rest, // Spread the rest of the properties
+          // asciiArt: s.asciiArt ?? null, // <-- COMMENT OUT or REMOVE
+          soundCode: s.soundCode ?? null,
+        };
+      }));
     } catch (error) {
       console.error("Error retrieving recent sessions:", error);
       res.status(500).json({

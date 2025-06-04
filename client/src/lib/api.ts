@@ -13,21 +13,22 @@ export interface OracleSession {
   mantra?: string | null;
   poem?: string | null;
   songPrompt?: string | null;
-  tarotCardSvgString?: string | null; // tarotCardImageUrl was renamed to tarotCardSvgString
-  asciiArt?: string | null; // <-- ADDED to match backend
+  tarotCardSvgString?: string | null;
+  asciiArt?: string | null;
+  soundCode?: string | null; // <-- ADDED to match backend
   completed?: boolean;
-  createdAt?: string; // Consider if you need this on the client and its type (string vs Date)
+  createdAt?: string;
 }
 
 export interface StartOracleSessionResponse {
   sessionId: string;
-  riddle: string; // This is 'riddleText' from the backend session
-  answers: string[]; // This is 'riddleAnswers' from the backend session
+  riddle: string;
+  answers: string[];
 }
 
 
 export interface RiddleAnswerResponse {
-  sigils: string[]; // These are SVG strings
+  sigils: string[];
 }
 
 export interface CompleteJourneyResponse {
@@ -39,14 +40,12 @@ export interface CompleteJourneyResponse {
   poem: string | null;
   songPrompt: string | null;
   tarotCardSvgString?: string | null;
-  asciiArt?: string | null; // <-- Correctly added
+  asciiArt?: string | null;
+  soundCode?: string | null; // <-- ADDED to match backend
 }
 
 export async function startOracleSession(): Promise<StartOracleSessionResponse> {
   const response = await apiRequest("POST", "/api/oracle/start");
-  // The backend for /api/oracle/start returns { sessionId, riddle, answers }
-  // where 'riddle' is session.riddleText and 'answers' is session.riddleAnswers.
-  // This matches StartOracleSessionResponse.
   return await response.json();
 }
 
@@ -74,7 +73,6 @@ export async function completeJourney(sessionId: string, cardValue: string): Pro
   return await response.json();
 }
 
-// This function expects the full OracleSession object from the backend
 export async function getSession(sessionId: string): Promise<OracleSession> {
   const response = await apiRequest("GET", `/api/oracle/session/${sessionId}`);
   return await response.json();
